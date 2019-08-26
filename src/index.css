@@ -58,6 +58,7 @@ ol, ul {
 .tiles {
     display: flex;
     flex-direction: row;
+    flex-wrap: nowrap;
 }
 
 .game-board {
@@ -69,6 +70,13 @@ ol, ul {
 .game-info {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: space-evenly;
+    padding: 1em 0;
+}
+
+.game-start {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
     padding: 1em 0;
 }

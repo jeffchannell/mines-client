@@ -157,10 +157,12 @@ class Game extends React.Component {
             flags: 0,
             setFlags: false,
             tiles: [],
-            timer: false,
+            timer: 0,
             totalMines: 99,
             uuid: false,
         };
+        this.intervalHandle = null;
+        this.tick = this.tick.bind(this);
     }
 
     endGame() {
@@ -168,8 +170,12 @@ class Game extends React.Component {
             this.setState({
                 flags: 0,
                 tiles: [],
+                timer: 0,
                 uuid: false,
             })
+            if (this.intervalHandle) {
+                clearInterval(this.intervalHandle);
+            }
         }
         // send a request to the server to start the game
         fetch("http://localhost:55555/games/"+this.state.uuid, {
@@ -210,6 +216,9 @@ class Game extends React.Component {
                 flags: data.flags,
                 tiles: data.grid,
             });
+            if (data.end && this.intervalHandle) {
+                clearInterval(this.intervalHandle);
+            }
         })
         .catch((error) => {
             console.log(error, "game not created")
@@ -261,10 +270,11 @@ class Game extends React.Component {
         const height = this.state.height;
         const width = this.state.width;
         const flags = this.state.flags;
+        const timer = this.state.timer;
         return (
             <div className="game">
                 <div className="game-info">
-                    <div>timer</div>
+                    <div>{timer}</div>
                     <button
                         className="end-button"
                         onClick={() => this.endGame()}
@@ -291,30 +301,41 @@ class Game extends React.Component {
     renderStart() {
         return (
             <div className="game">
-                <input
-                    name="width"
-                    type="number"
-                    value={this.state.width}
-                    onChange={(e) => this.onChangeWidth(e)}
-                />
-                <input
-                    name="height"
-                    type="number"
-                    value={this.state.height}
-                    onChange={(e) => this.onChangeHeight(e)}
-                />
-                <input
-                    name="bombs"
-                    type="number"
-                    value={this.state.totalMines}
-                    onChange={(e) => this.onChangeMines(e)}
-                />
-                <button
-                    className="start-button"
-                    onClick={() => this.startGame()}
-                    >
-                    Start Game
-                </button>
+                <div className="game-start">
+                    <label>Width</label>
+                    <input
+                        name="width"
+                        type="number"
+                        value={this.state.width}
+                        onChange={(e) => this.onChangeWidth(e)}
+                    />
+                </div>
+                <div className="game-start">
+                    <label>Height</label>
+                    <input
+                        name="height"
+                        type="number"
+                        value={this.state.height}
+                        onChange={(e) => this.onChangeHeight(e)}
+                    />
+                </div>
+                <div className="game-start">
+                    <label>Mines</label>
+                    <input
+                        name="mines"
+                        type="number"
+                        value={this.state.totalMines}
+                        onChange={(e) => this.onChangeMines(e)}
+                    />
+                </div>
+                <div className="game-board">
+                    <button
+                        className="start-button"
+                        onClick={() => this.startGame()}
+                        >
+                        Start Game
+                    </button>
+                </div>
             </div>
         );
     }
@@ -335,18 +356,23 @@ class Game extends React.Component {
             body: "w="+this.state.width+"&h="+this.state.height+"&m="+this.state.totalMines,
         })
         .then(response => {
-            return response.json()
+            return response.json();
         })
         .then(data => {
             let tiles = Array(this.state.height * this.state.width).fill("?");
             this.setState({
                 uuid: data.uuid,
                 tiles: tiles,
-            })
+            });
+            this.intervalHandle = setInterval(this.tick, 1000);
         })
         .catch((error) => {
-            console.log(error, "game not created")
+            console.log(error, "game not created");
         });
+    }
+
+    tick() {
+        this.setState({timer: this.state.timer + 1});
     }
 }
 
