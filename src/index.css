@@ -55,12 +55,20 @@ ol, ul {
     background: #ddd;
 }
 
-.game {
+.tiles {
     display: flex;
     flex-direction: row;
 }
 
-.game-info {
-    margin-left: 20px;
+.game-board {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }
 
+.game-info {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 1em 0;
+}

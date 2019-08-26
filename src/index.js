@@ -33,17 +33,23 @@ class Tile extends React.Component {
         if ("" === this.props.value) {
             className.push('open');
         } else if ("!" === this.props.value) {
-            className.push('flagged');
+            className.push('flag');
+            label = "🏁"
+        } else if ("X" === this.props.value) {
+            className.push('mine');
+            label = "🏁"
         } else if (this.props.value.match(/^[1-8]$/)) {
             className.push('open');
             label = this.props.value;
         } else if ("9" === this.props.value) {
+            label = "💣"
             className.push('mine');
         }
         return (
             <button
                 className={className.join(' ')}
                 onClick={this.props.onClick}
+                onMouseDown={this.props.onMouseDown}
             >
                 {label}
             </button>
@@ -66,7 +72,8 @@ class Row extends React.Component {
         return <Tile
             value={value}
             key={'tile_' + x + '_' + y}
-            onClick={() => this.props.onClick(x, y)}
+            onClick={(event) => this.props.onClick(event, x, y)}
+            onMouseDown={(event) => this.props.onMouseDown(event, x, y)}
         />;
     }
 
@@ -105,7 +112,8 @@ class Board extends React.Component {
                 y={y}
                 key={"row_" + y}
                 cols={cols}
-                onClick={(y, x) => this.props.onClick(y, x)}
+                onClick={(event, x, y) => this.props.onClick(event, x, y)}
+                onMouseDown={(event, x, y) => this.props.onMouseDown(event, x, y)}
             />
         );
     }
@@ -146,8 +154,8 @@ class Game extends React.Component {
         this.state = {
             width: 30,
             height: 16,
+            flags: 0,
             setFlags: false,
-            stepNumber: 0,
             tiles: [],
             timer: false,
             totalMines: 99,
@@ -155,13 +163,36 @@ class Game extends React.Component {
         };
     }
 
+    endGame() {
+        let done = () => {
+            this.setState({
+                flags: 0,
+                tiles: [],
+                uuid: false,
+            })
+        }
+        // send a request to the server to start the game
+        fetch("http://localhost:55555/games/"+this.state.uuid, {
+            method: "DELETE",
+        })
+        .then(done)
+        .catch((error) => {
+            console.log(error, "game not created")
+            done();
+        });
+    }
+
     /**
      * Handle the click action on a button.
      * 
-     * @param {int} y
      * @param {int} x
+     * @param {int} y
      */
-    handleClick(y, x) {
+    handleClick(event, x, y) {
+        let body = "x=" + x + "&y=" + y;
+        if ((1 === event.button) || event.ctrlKey) {
+            body += "&flag=1";
+        }
         fetch("http://localhost:55555/games/"+this.state.uuid, {
             method: "POST",
             dataType: "JSON",
@@ -169,19 +200,26 @@ class Game extends React.Component {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Accept": "application/json",
             },
-            body: "x=" + x + "&y=" + y + (this.state.setFlags ? "&flag=1" : ""),
+            body: body,
         })
         .then(response => {
             return response.json()
         })
         .then(data => {
             this.setState({
+                flags: data.flags,
                 tiles: data.grid,
             });
         })
         .catch((error) => {
             console.log(error, "game not created")
         });
+    }
+
+    handleMouseDown(event, x, y) {
+        if (1 === event.button) {
+            this.handleClick(event, x, y);
+        }
     }
 
     onChangeWidth(event) {
@@ -222,22 +260,29 @@ class Game extends React.Component {
         const tiles = this.state.tiles;
         const height = this.state.height;
         const width = this.state.width;
+        const flags = this.state.flags;
         return (
             <div className="game">
-                <div className="game-board">
-                    <Board
-                        height={height}
-                        width={width}
-                        tiles={tiles}
-                        onClick={(x, y) => this.handleClick(y, x)}
-                    />
-                </div>
                 <div className="game-info">
-                    {/* <div>{status}</div> */}
-                    {/* <ol>
-                        {moves}
-                    </ol> */}
-                    {/* {endbutton} */}
+                    <div>timer</div>
+                    <button
+                        className="end-button"
+                        onClick={() => this.endGame()}
+                        >
+                        End Game
+                    </button>
+                    <div>{flags}</div>
+                </div>
+                <div className="game-board">
+                    <div className="tiles">
+                        <Board
+                            height={height}
+                            width={width}
+                            tiles={tiles}
+                            onClick={(event, x, y) => this.handleClick(event, x, y)}
+                            onMouseDown={(event, x, y) => this.handleMouseDown(event, x, y)}
+                        />
+                    </div>
                 </div>
             </div>
         );
