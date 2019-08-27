@@ -216,7 +216,7 @@ class Game extends React.Component {
                 flags: data.flags,
                 tiles: data.grid,
             });
-            if (data.end && this.intervalHandle) {
+            if (data.ended_at && this.intervalHandle) {
                 clearInterval(this.intervalHandle);
             }
         })
