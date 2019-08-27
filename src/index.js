@@ -214,7 +214,7 @@ class Game extends React.Component {
         .then(data => {
             this.setState({
                 flags: data.flags,
-                tiles: data.grid,
+                tiles: data.tiles,
             });
             if (data.ended_at && this.intervalHandle) {
                 clearInterval(this.intervalHandle);
