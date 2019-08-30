@@ -80,3 +80,13 @@ ol, ul {
     justify-content: space-evenly;
     padding: 1em 0;
 }
+
+.modal {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.modal .msg {
+    padding-right: 3em;
+}

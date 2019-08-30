@@ -1,13 +1,27 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import Modal from 'react-modal';
 import './index.css';
 
 /**
- * A small project to learn React JS based on the initial tic-tac-toe tutorial.
+ * A small project to learn React JS.
  * 
  * @author Jeff Channell
  * @copyright Kopyleft. All Rites Reversed.
  */
+
+const modalStyle = {
+    content : {
+        top: '50%',
+        left: '50%',
+        right: 'auto',
+        bottom: 'auto',
+        marginRight: '-50%',
+        transform: 'translate(-50%, -50%)'
+    }
+};
+
+Modal.setAppElement('#root');
 
 /**
  * Tile Class
@@ -152,6 +166,7 @@ class Game extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            alert: false,
             width: 30,
             height: 16,
             flags: 0,
@@ -163,6 +178,8 @@ class Game extends React.Component {
         };
         this.intervalHandle = null;
         this.tick = this.tick.bind(this);
+        this.openModal = this.openModal.bind(this);
+        this.closeModal = this.closeModal.bind(this);
     }
 
     endGame() {
@@ -212,16 +229,20 @@ class Game extends React.Component {
             return response.json()
         })
         .then(data => {
+            if (data.error) {
+                throw new Error(data.error)
+            }
             this.setState({
                 flags: data.flags,
                 tiles: data.tiles,
             });
             if (data.ended_at && this.intervalHandle) {
+                this.openModal(data.won ? "You win!" : "You lost!");
                 clearInterval(this.intervalHandle);
             }
         })
         .catch((error) => {
-            console.log(error, "game not created")
+            this.openModal(error);
         });
     }
 
@@ -231,8 +252,42 @@ class Game extends React.Component {
         }
     }
 
+    openModal(message) {
+        this.setState({alert: message+""});
+    }
+
+    closeModal() {
+        this.setState({alert: false});
+    }
+
     onChangeWidth(event) {
         return this.onChangeStartState(event, 'width');
+    }
+
+    renderModal() {
+        let isOpen = (false !== this.state.alert);
+        let message = isOpen ? this.state.alert : "";
+        return (
+            <Modal
+                isOpen={isOpen}
+                onRequestClose={this.closeModal}
+                style={modalStyle}
+                contentLabel="Alert!"
+            >
+                <div
+                    className="modal"
+                >
+                    <div
+                        className="msg"
+                    >
+                        {message}
+                    </div>
+                    <button onClick={this.closeModal}>
+                        <span role="img" aria-label="close">❌</span>
+                    </button>
+                </div>
+            </Modal>
+        );
     }
 
     onChangeMines(event) {
@@ -294,6 +349,7 @@ class Game extends React.Component {
                         />
                     </div>
                 </div>
+                {this.renderModal()}
             </div>
         );
     }
@@ -336,6 +392,7 @@ class Game extends React.Component {
                         Start Game
                     </button>
                 </div>
+                {this.renderModal()}
             </div>
         );
     }
@@ -359,6 +416,9 @@ class Game extends React.Component {
             return response.json();
         })
         .then(data => {
+            if (data.error) {
+                throw new Error(data.error)
+            }
             let tiles = Array(this.state.height * this.state.width).fill("?");
             this.setState({
                 uuid: data.uuid,
@@ -367,7 +427,7 @@ class Game extends React.Component {
             this.intervalHandle = setInterval(this.tick, 1000);
         })
         .catch((error) => {
-            console.log(error, "game not created");
+            this.openModal(error);
         });
     }
 
