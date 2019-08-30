@@ -1,3 +1,14 @@
+# Minesweeper Client
+
+## Build
+
+```bash
+docker build -t mines-client:dev .
+docker run -v ${PWD}:/app -v /app/node_modules -p 3000:3000 --rm mines-client:dev
+```
+
+## From React
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
