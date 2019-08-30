@@ -3,8 +3,7 @@
 ## Build
 
 ```bash
-docker build -t mines-client:dev .
-docker run -v ${PWD}:/app -v /app/node_modules -p 3000:3000 --rm mines-client:dev
+docker-compose up
 ```
 
 ## From React
